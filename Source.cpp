@@ -59,8 +59,8 @@ public:
 		}
 		a0 = (A02 * A11 - A01 * A12) / (A00 * A11 - A01 * A01);
 		a1 = (A00 * A12 - A01 * A02) / (A00 * A11 - A01 * A01);
+		std::cout << a0 << a1 << std::endl;
 	}
-
 };
 
 class Search {
@@ -72,6 +72,8 @@ private:
 	int i;
 	int y_=0;
 	int LOOPTIME = 3;
+	int MAXHIGH = 510;
+	int RANGE = MAXHIGH/LOOPTIME;
 	std::vector<int> listX_, listY_, midPoint_;
 public:
 	Mat hsvImg, mask, filteredImg;
@@ -82,50 +84,61 @@ public:
 
 		cvtColor(sharpImg, hsvImg, CV_BGR2HSV, 3);
 
-		inRange(hsvImg, Scalar(0, 0, 0), Scalar(40, 255, 255), mask);
+		inRange(hsvImg, Scalar(0, 0, 0), Scalar(50, 255, 255), mask);
 		medianBlur(mask, filteredImg, 5);
-		for (y_ = 0; y_ < high_; y_++) {
-			for (i = 0; i < widch_; i++) {
-				std::cout << (int)mask.at<uchar>(y_, i)<<std::endl;
-			}
+		namedWindow("filtered", cv::WINDOW_NORMAL);
+		imshow("filtered", filteredImg);
+		namedWindow("mask", cv::WINDOW_NORMAL);
+		imshow("mask", mask);
+		int key = waitKey(1);
+		if (key == 113) {
+			exit(0);
 		}
-		std::cout <<"next" << std::endl;
 
-		for (y_ = 0; y_ < high_; y_++) {
-			for (i = 0; i < widch_; i++) {
-				std::cout << (int)filteredImg.at<uchar>(y_, i) << std::endl;
-				if ((int)filteredImg.at<uchar>(y_, i) == 0) {
+		for (y_ = 0; y_ < LOOPTIME; y_++) {
+			for (i = 1; i <= widch_; i++) {
+				if ((int)filteredImg.at<uchar>(RANGE*y_, i-1) == 0) {
 					pxNum_ += i;
-					std::cout << "ok" << i << "	" << y_ << std::endl;
 				}
-				pxNum_ /= i;
-				pxNum_ -= widch_ / 2;
-				listX_.push_back(pxNum_);
-				listY_.push_back(y_);
 			}
+			pxNum_ /= i;
+			pxNum_ -= widch_ / 2;
+			std::cout << pxNum_ << std::endl;
+			listX_.push_back(pxNum_);
+			listY_.push_back(y_);
 		}
+		leastSquare(listX_, listY_);
 		listX_.clear();
 		listY_.clear();
 	}
 };
 
-int main()
-{
+int main(){
+	Mat img;
 	Mat filteredImg, sharpImg;
-	Mat img = imread("33.png");
-	if (!img.data) return - 1;
-	
-//	ImgFilter filter;
-//	filter.UnsharpMasking(img, out, 4.0);
-	float k = 4.0;
-	Mat kernel = (cv::Mat_<float>(3, 3) <<
-		-k / 9.0f, -k / 9.0f, -k / 9.0f,
-		-k / 9.0f, 1 + (8 * k) / 9.0f, -k / 9.0f,
-		-k / 9.0f, -k / 9.0f, -k / 9.0f);
-	filter2D(img, sharpImg, -1, kernel, Point(-1, -1), 0.0, BORDER_DEFAULT);
-	convertScaleAbs(sharpImg, sharpImg, 1, 0);
+//	Mat img = imread("33.png");
+//	if (!img.data) return - 1;
 
-	Search search(sharpImg);
+	VideoCapture cap(2);
+	if (!cap.isOpened())	return -1;
+
+	while (1) {
+		cap >> img;
+		imshow("img", img);
+		//	ImgFilter filter;
+		//	filter.UnsharpMasking(img, out, 4.0);
+		float k = 4.0;
+		Mat kernel = (cv::Mat_<float>(3, 3) <<
+			-k / 9.0f, -k / 9.0f, -k / 9.0f,
+			-k / 9.0f, 1 + (8 * k) / 9.0f, -k / 9.0f,
+			-k / 9.0f, -k / 9.0f, -k / 9.0f);
+		filter2D(img, sharpImg, -1, kernel, Point(-1, -1), 0.0, BORDER_DEFAULT);
+		convertScaleAbs(sharpImg, sharpImg, 1, 0);
+
+		Search search(sharpImg);
+	}
+	destroyAllWindows();
+
 
 	/*
 	namedWindow("WINDOW_NAME", cv::WINDOW_NORMAL);
