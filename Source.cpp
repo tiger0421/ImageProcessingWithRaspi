@@ -71,50 +71,65 @@ private:
 	int th_ = 100;
 	int i;
 	int y_=0;
+	int count_;
 	int LOOPTIME = 3;
-	int MAXHIGH = 510;
+	int MAXHIGH = 150;
 	int RANGE = MAXHIGH/LOOPTIME;
+	float k = 4.0;
 	std::vector<int> listX_, listY_, midPoint_;
 public:
-	Mat hsvImg, mask, filteredImg;
+	Mat hsvRoi, maskRoi, filteredImg;
+	Mat cpRoi, dstImg, imgRoi, filterRoi;
 
-	Search(Mat sharpImg) {
-		widch_ = sharpImg.cols;
-		high_ = sharpImg.rows;
-
-		cvtColor(sharpImg, hsvImg, CV_BGR2HSV, 3);
-
-		inRange(hsvImg, Scalar(0, 0, 0), Scalar(50, 255, 255), mask);
-		medianBlur(mask, filteredImg, 5);
-		namedWindow("filtered", cv::WINDOW_NORMAL);
-		imshow("filtered", filteredImg);
-		namedWindow("mask", cv::WINDOW_NORMAL);
-		imshow("mask", mask);
-		int key = waitKey(1);
-		if (key == 113) {
-			exit(0);
-		}
+	Search(Mat Img) {
+		widch_ = Img.cols;
+		high_ = Img.rows;
+		dstImg = Img.clone();
 
 		for (y_ = 0; y_ < LOOPTIME; y_++) {
-			for (i = 1; i <= widch_; i++) {
-				if ((int)filteredImg.at<uchar>(RANGE*y_, i-1) == 0) {
+			Rect roi(0, RANGE*y_, widch_, 3);
+			imgRoi = Img(roi);
+			cpRoi = dstImg(roi);
+/*
+			Mat kernel = (cv::Mat_<float>(3, 3) <<
+				-k / 9.0f, -k / 9.0f, -k / 9.0f,
+				-k / 9.0f, 1 + (8 * k) / 9.0f, -k / 9.0f,
+				-k / 9.0f, -k / 9.0f, -k / 9.0f);
+			filter2D(imgRoi, cpRoi, -1, kernel, Point(-1, -1), 0.0, BORDER_DEFAULT);
+			convertScaleAbs(cpRoi, cpRoi, 1, 0);
+*/
+			cvtColor(cpRoi, hsvRoi, CV_BGR2HSV, 3);
+			inRange(hsvRoi, Scalar(0, 0, 0), Scalar(45, 255, 255), maskRoi);
+			medianBlur(maskRoi, filterRoi, 5);
+
+			for (i = 1, count_ = 1; i <= widch_; i++) {
+				if ((int)filterRoi.at<uchar>(1, i-1) == 255) {
 					pxNum_ += i;
+					count_++;
 				}
 			}
-			pxNum_ /= i;
+			pxNum_ /= count_;
 			pxNum_ -= widch_ / 2;
-			std::cout << pxNum_ << std::endl;
 			listX_.push_back(pxNum_);
-			listY_.push_back(y_);
+			listY_.push_back(RANGE*y_);
+			circle(Img, Point(pxNum_+(widch_/2), RANGE*y_), 10, Scalar(0, 100, 0), -1, CV_AA);
 		}
 		leastSquare(listX_, listY_);
 		listX_.clear();
 		listY_.clear();
+		namedWindow("filtered", cv::WINDOW_NORMAL);
+		imshow("filtered", Img);
+		int key = waitKey(1);
+		if (key == 113) {
+//			imwrite("result.png", Img);
+			exit(0);
+		}
+
 	}
 };
 
 int main(){
-	Mat img;
+	Mat Img;
 	Mat filteredImg, sharpImg;
 //	Mat img = imread("33.png");
 //	if (!img.data) return - 1;
@@ -123,19 +138,11 @@ int main(){
 	if (!cap.isOpened())	return -1;
 
 	while (1) {
-		cap >> img;
-		imshow("img", img);
+		cap >> Img;
 		//	ImgFilter filter;
 		//	filter.UnsharpMasking(img, out, 4.0);
-		float k = 4.0;
-		Mat kernel = (cv::Mat_<float>(3, 3) <<
-			-k / 9.0f, -k / 9.0f, -k / 9.0f,
-			-k / 9.0f, 1 + (8 * k) / 9.0f, -k / 9.0f,
-			-k / 9.0f, -k / 9.0f, -k / 9.0f);
-		filter2D(img, sharpImg, -1, kernel, Point(-1, -1), 0.0, BORDER_DEFAULT);
-		convertScaleAbs(sharpImg, sharpImg, 1, 0);
 
-		Search search(sharpImg);
+		Search search(Img);
 	}
 	destroyAllWindows();
 
