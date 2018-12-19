@@ -3,44 +3,28 @@
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
 #include <vector>
+//#include <wiringPi.h>
 using namespace cv;
 
-
-class Coordnt {
+/*
+class Communicate {
 private:
-	std::vector<int> Xcoordinate_;
-	std::vector<int> Ycoordinate_;
+	char var;
 public:
-	Coordnt(int X, int Y) {
-		Xcoordinate_.push_back(X);
-		Ycoordinate_.push_back(Y);
-	}
-	void add(int X, int Y) {
-		Xcoordinate_.push_back(X);
-		Ycoordinate_.push_back(Y);
-	}
-	void resize(int size) {
-		Xcoordinate_.resize(size);
-		Ycoordinate_.resize(size);
-	}
-	void print(int num) {
-		std::cout << "Xcoordinate=" << Xcoordinate_[num] << std::endl;
-		std::cout << "Ycoordinate=" << Ycoordinate_[num] << std::endl;
+	Communicate(double a0, double a1) {
+		int fd = serialOpen("/dev/ttyACM0", 9600);
+		if (fd < 0)	exit(1);
+
+		if (a0 > 0) {
+			var = 'L';
+		}
+		else if (a0 < 0) {
+			var = 'R';
+		}
+		serialPrintf(fd, "%c", var);
 	}
 };
-
-class ImgFilter {
-private:
-	Mat kernel;
-public:
-	void UnsharpMasking(Mat src, Mat dst, float k) {
-		kernel = (cv::Mat_<float>(3, 3) <<
-			-k / 9.0f, -k / 9.0f, -k / 9.0f,
-			-k / 9.0f, 1 + (8 * k) / 9.0f, -k / 9.0f,
-			-k / 9.0f, -k / 9.0f, -k / 9.0f);
-		filter2D(src, dst, -1, kernel, Point(-1, -1), 0.0, BORDER_DEFAULT);
-	}
-};
+*/
 
 class leastSquare {
 private:
@@ -60,6 +44,8 @@ public:
 		a0 = (A02 * A11 - A01 * A12) / (A00 * A11 - A01 * A01);
 		a1 = (A00 * A12 - A01 * A02) / (A00 * A11 - A01 * A01);
 		std::cout << a0 << a1 << std::endl;
+//		Communicate communicate(a0, a1);
+
 	}
 };
 
@@ -68,7 +54,6 @@ private:
 	int pxNum_=0;
 	int widch_, high_;
 	int LEdge_, REdge_;
-	int th_ = 100;
 	int i;
 	int y_=0;
 	int count_;
@@ -77,10 +62,9 @@ private:
 	int RANGE = MAXHIGH/LOOPTIME;
 	float k = 4.0;
 	std::vector<int> listX_, listY_, midPoint_;
-public:
 	Mat hsvRoi, maskRoi, filteredImg;
 	Mat cpRoi, dstImg, imgRoi, filterRoi;
-
+public:
 	Search(Mat Img) {
 		widch_ = Img.cols;
 		high_ = Img.rows;
@@ -99,7 +83,7 @@ public:
 			convertScaleAbs(cpRoi, cpRoi, 1, 0);
 */
 			cvtColor(cpRoi, hsvRoi, CV_BGR2HSV, 3);
-			inRange(hsvRoi, Scalar(0, 0, 0), Scalar(45, 255, 255), maskRoi);
+			inRange(hsvRoi, Scalar(0, 0, 0), Scalar(180, 255, 170), maskRoi);
 			medianBlur(maskRoi, filterRoi, 5);
 
 			for (i = 1, count_ = 1; i <= widch_; i++) {
