@@ -123,6 +123,7 @@ public:
 
 		for (y_ = 0; y_ < LOOPTIME; y_++) {
 			Rect roi(0, high_ - RANGE*y_ -3, width_, 3);
+			std::cout << roi << std::endl;
 			imgRoi = Img(roi);
 			cpRoi = cpImg(roi);
 			cvtColor(cpRoi, hsvRoi, CV_BGR2HSV, 3);
@@ -163,7 +164,7 @@ int main() {
 
 //	if (fd < 0) exit(1);
 
-	VideoCapture cap(2);
+	VideoCapture cap(1);
 	if (!cap.isOpened())    return -1;
 	cap >> Img;
 	width_ = Img.cols;
