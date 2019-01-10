@@ -15,7 +15,8 @@ int MAXHIGH = 200;
 int RANGE = MAXHIGH / LOOPTIME;
 double Xu, Xd;
 double Yu, Yd = 0;
-
+auto avetime = 0;
+int count = 0;
 
 /*
 class Communicate {
@@ -120,10 +121,10 @@ private:
 public:
 	Search(Mat Img) {
 		cpImg = Img.clone();
+		auto start = std::chrono::system_clock::now();
 
 		for (y_ = 0; y_ < LOOPTIME; y_++) {
 			Rect roi(0, high_ - RANGE*y_ -3, width_, 3);
-			std::cout << roi << std::endl;
 			imgRoi = Img(roi);
 			cpRoi = cpImg(roi);
 			cvtColor(cpRoi, hsvRoi, CV_BGR2HSV, 3);
@@ -141,10 +142,18 @@ public:
 			aveXCoordinate_ -= width_ / 2;
 			listX_.push_back(aveXCoordinate_);
 			listY_.push_back(RANGE*y_);
-			circle(Img, Point(aveXCoordinate_ + (width_ / 2), high_ - RANGE*y_), 10, Scalar(142, 255, 142), -1, CV_AA);
+//			circle(Img, Point(aveXCoordinate_ + (width_ / 2), high_ - RANGE*y_), 10, Scalar(142, 255, 142), -1, CV_AA);
 		}
 		leastSquare(listX_, listY_);
 //		line(Img, Point((int)Xd, (int)Yd), Point((int)Xu, (int)Yu), Scalar(0, 255, 255), 10, CV_AA);
+
+/*
+		auto end = std::chrono::system_clock::now();
+		auto dur = end - start;
+		auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
+		avetime += msec;
+		std::cout<<(double)avetime/count<<std::endl;
+*/
 		listX_.clear();
 		listY_.clear();
 
@@ -164,24 +173,18 @@ int main() {
 
 //	if (fd < 0) exit(1);
 
-	VideoCapture cap(1);
+	VideoCapture cap(2);
 	if (!cap.isOpened())    return -1;
 	cap >> Img;
 	width_ = Img.cols;
 	high_ = Img.rows;
 	Yu = high_ - 1;
 
-	while (1) {
-//		auto start = std::chrono::system_clock::now();
+	while (count<100) {
 		cap >> Img;
+		count++;
 
 		Search search(Img);
-/*
-		auto end = std::chrono::system_clock::now();
-		auto dur = end - start;
-		auto msec = std::chrono::duration_cast<std::chrono::milliseconds>(dur).count();
-		std::cout<<msec<<std::endl;
-*/
 	}
 			/*
 			namedWindow("WINDOW_NAME", cv::WINDOW_NORMAL);
