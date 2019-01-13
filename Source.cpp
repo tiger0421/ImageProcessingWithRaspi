@@ -142,7 +142,7 @@ public:
 			aveXCoordinate_ -= width_ / 2;
 			listX_.push_back(aveXCoordinate_);
 			listY_.push_back(RANGE*y_);
-//			circle(Img, Point(aveXCoordinate_ + (width_ / 2), high_ - RANGE*y_), 10, Scalar(142, 255, 142), -1, CV_AA);
+			circle(Img, Point(aveXCoordinate_ + (width_ / 2), high_ - RANGE*y_), 10, Scalar(142, 255, 142), -1, CV_AA);
 		}
 		leastSquare(listX_, listY_);
 //		line(Img, Point((int)Xd, (int)Yd), Point((int)Xu, (int)Yu), Scalar(0, 255, 255), 10, CV_AA);
@@ -160,9 +160,10 @@ public:
 
 		namedWindow("filtered", cv::WINDOW_NORMAL);
 		imshow("filtered", Img);
+		imwrite("result.png", Img);
 		int key = waitKey(1);
 		if (key == 113) {
-//			imwrite("result.png", Img);
+			imwrite("result.png", Img);
 			exit(0);
 		}
 	}
@@ -172,16 +173,18 @@ int main() {
 	Mat Img;
 
 //	if (fd < 0) exit(1);
-
+/*
 	VideoCapture cap(2);
 	if (!cap.isOpened())    return -1;
 	cap >> Img;
+*/
+	Img = imread("line.png");
 	width_ = Img.cols;
 	high_ = Img.rows;
 	Yu = high_ - 1;
 
-	while (count<100) {
-		cap >> Img;
+	while (count<1) {
+//		cap >> Img;
 		count++;
 
 		Search search(Img);
